@@ -1,0 +1,36 @@
+{
+  "name": "jcarrasco96/shortenit-v1",
+  "description": "ShortenIt",
+  "type": "project",
+  "autoload": {
+    "psr-4": {
+      "ShortenIt\\": "./"
+    }
+  },
+  "authors": [
+    {
+      "name": "Jesus Carrasco",
+      "email": "jcarrasco96@outlook.com"
+    }
+  ],
+  "require": {
+    "php": ">=8.2",
+    "jcarrasco96/simple-api-rest": "1.0.*@dev",
+    "ramsey/uuid": "^4.8",
+    "ext-pdo": "*",
+    "phpmailer/phpmailer": "^6.10"
+  },
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://asset-packagist.org"
+    },
+    {
+      "type": "path",
+      "url": "C:\\DEVELOP\\PROGRAMMING\\WEB\\website\\my-api-rest",
+      "options": {
+        "symlink": false
+      }
+    }
+  ]
+}
