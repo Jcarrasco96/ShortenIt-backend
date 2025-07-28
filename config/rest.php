@@ -1,9 +1,7 @@
 <?php
 
-use ShortenIt\models\User;
-
 return [
-    'jwtSecretKey' => '',
+    'jwtSecretKey' => 'a6c97b34eb883228e640653165712092',
     'origins' => [
         'http://localhost',
         'http://localhost:8080',
@@ -17,7 +15,7 @@ return [
             'host' => 'localhost',
             'user' => 'root',
             'password' => '',
-            'dbname' => 'test',
+            'dbname' => 'oqcheck',
             'port' => '3306',
             'charset' => 'utf8',
         ],
@@ -28,6 +26,15 @@ return [
     'controllerNamespace' => 'ShortenIt\\controllers',
     'modelNamespace' => 'ShortenIt\\models',
     'repositoryNamespace' => 'ShortenIt\\repository',
-    'userModel' => User::class,
     'blockedIPsFile' => 'blocked_ips.txt',
+    'mail' => [
+        'host' => 'smtp.gmail.com',
+        'username' => 'jcarrasco96joker@gmail.com',
+        'password' => 'mhmdbacfnajoakts',
+        'encryption' => 'tls',
+        'port' => 587,
+    ],
+    'params' => [
+        'supportEmail' => 'support@shortenit.com'
+    ]
 ];
