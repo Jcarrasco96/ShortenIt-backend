@@ -3,7 +3,8 @@
 namespace ShortenIt\controllers;
 
 use Faker\Factory;
-use ShortenIt\models\Link;
+use ShortenIt\helpers\Controller;
+use ShortenIt\repository\LinkRepository;
 use SimpleApiRest\attributes\Permission;
 use SimpleApiRest\attributes\RateLimit;
 use SimpleApiRest\attributes\Route;
@@ -11,7 +12,7 @@ use SimpleApiRest\exceptions\BadRequestHttpException;
 use SimpleApiRest\exceptions\NotFoundHttpException;
 use SimpleApiRest\query\SelectSafeQuery;
 
-class LinkController extends GenericController
+class LinkController extends Controller
 {
 
     #[Route('links', [Route::ROUTER_GET])]
@@ -49,7 +50,7 @@ class LinkController extends GenericController
         ])->execute();
 
         return [
-            'links' => $links,
+            'data' => $links,
             'total' => $total,
             'page' => $page,
             'limit' => $limit,
@@ -64,24 +65,20 @@ class LinkController extends GenericController
     #[Route('links', [Route::ROUTER_POST])]
     public function actionCreate(): array
     {
-        $exists = Link::exists('original_url', $this->data['url']);
+        $exists = LinkRepository::exists('original_url', $this->data['url']);
 
         if ($exists) {
             throw new BadRequestHttpException('This element already exists.');
         }
 
-        $link = Link::create([
+        $link = LinkRepository::create([
             'url' => $this->data['url'],
         ]);
-
-        if (empty($link)) {
-            throw new BadRequestHttpException('ErrorComponent creating link.');
-        }
 
         return [
             'message' => 'link created!',
             'status' => 201,
-            'link' => $link,
+            'data' => $link,
         ];
     }
 
@@ -92,14 +89,14 @@ class LinkController extends GenericController
     #[Route('links/{code}', [Route::ROUTER_GET])]
     public function actionView(string $code): array
     {
-        $link = Link::findByCode($code);
+        $link = LinkRepository::findByCode($code);
 
         if (!$link) {
             throw new NotFoundHttpException("Link with id $code not found");
         }
 
         return [
-            'link' => $link,
+            'data' => $link,
         ];
     }
 
@@ -110,18 +107,16 @@ class LinkController extends GenericController
     #[Route('links/{code}/stats', [Route::ROUTER_GET])]
     public function actionStat(string $code): array
     {
-        $link = Link::findByCode($code);
+        $link = LinkRepository::findByCode($code);
 
         if (!$link) {
             throw new NotFoundHttpException("Link with id $code not found");
         }
 
-        $link->access_count++;
-
-        $link = Link::update($link->id, ['access_count' => $link->access_count]);
+        $link = LinkRepository::update($link->id, ['access_count' => $link->access_count + 1]);
 
         return [
-            'link' => $link,
+            'data' => $link,
         ];
     }
 
@@ -129,7 +124,7 @@ class LinkController extends GenericController
     #[Route('links/{uuid}', [Route::ROUTER_DELETE])]
     public function actionDelete(string $uuid): array
     {
-        Link::delete($uuid);
+        LinkRepository::delete($uuid);
 
         return [
             'message' => 'Link deleted.',
@@ -147,7 +142,7 @@ class LinkController extends GenericController
         $faker = Factory::create();
 
         for ($i = 0; $i < $qty; $i++) {
-            Link::create(['url' => $faker->url()]);
+            LinkRepository::create(['url' => $faker->url()]);
         }
 
         return [
@@ -172,18 +167,18 @@ class LinkController extends GenericController
         if (isset($this->data['short_code'])) {
             $data['short_code'] = $this->data['short_code'];
 
-            $exists = Link::findByCode($this->data['short_code']);
+            $exists = LinkRepository::findByCode($this->data['short_code']);
 
             if ($exists && $exists->id != $id) {
                 throw new BadRequestHttpException('This short code already exists.');
             }
         }
 
-        $link = Link::update($id, $data);
+        $link = LinkRepository::update($id, $data);
 
         return [
             'message' => 'Link updated',
-            'link' => $link,
+            'data' => $link,
         ];
     }
 
