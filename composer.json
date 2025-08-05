@@ -17,8 +17,10 @@
     "php": ">=8.2",
     "jcarrasco96/simple-api-rest": "1.0.*@dev",
     "ramsey/uuid": "^4.8",
-    "ext-pdo": "*",
-    "phpmailer/phpmailer": "^6.10"
+    "ext-pdo": "*"
+  },
+  "require-dev": {
+    "fakerphp/faker": "^1.24"
   },
   "repositories": [
     {
@@ -27,9 +29,9 @@
     },
     {
       "type": "path",
-      "url": "C:\\DEVELOP\\PROGRAMMING\\WEB\\website\\my-api-rest",
+      "url": "D:\\Programming\\WEB\\website\\my-api-rest",
       "options": {
-        "symlink": false
+        "symlink": true
       }
     }
   ]

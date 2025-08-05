@@ -2,180 +2,110 @@
 
 namespace ShortenIt\models;
 
-use Exception;
-use Ramsey\Uuid\Uuid;
-use Random\RandomException;
-use SimpleApiRest\core\Security;
-use SimpleApiRest\exceptions\BadRequestHttpException;
+use ShortenIt\repository\AuthenticationRepository;
 use SimpleApiRest\exceptions\NotFoundHttpException;
-use SimpleApiRest\models\UserIdentity;
-use SimpleApiRest\query\InsertSafeQuery;
-use SimpleApiRest\query\SelectSafeQuery;
+use SimpleApiRest\rest\Model;
 
 /**
  *
- * @property array[] $permissions
+ *  FOR USE RELATIONS
+ *
+ *  $users = array_map(function (UserComponent $data) {
+ *      $data->loadRelation('permissions');
+ *      return $data;
+ *  }, UserRepository::findAll());
+ *
+ * @property Authentication[] $permissions
  */
-class User extends UserIdentity
+class User extends Model
 {
 
-    protected static string $tableName = 'user';
-
     public string $id;
-    public string $username;
+    public string $name;
+    public string $email;
+    public string $phone_number;
+    public string $password_hash;
+    public ?string $password_reset_token;
+    public ?string $verification_token;
+    public string $status;
+    public string $created_at;
+    public string $updated_at;
+    public ?string $created_by;
+    public ?string $updated_by;
+    public bool $notify_email;
+    public bool $notify_app;
+    public bool $notify_sms;
+    public ?string $last_logout_at;
+
+    public string $position;
+    public ?string $driver_license;
+    public ?string $npi;
+    public ?string $professional_license;
+    public ?string $professional_license2;
+    public ?string $ahca;
+    public ?string $fars;
+    public ?string $cfars;
+    public ?string $cpr;
+    public ?string $first_aid;
+    public ?string $hipaa;
+    public ?string $osha;
+    public ?string $hiv_aids;
+    public ?string $domestic_violence;
+    public ?string $medical_error;
+    public ?string $infection_control;
+    public ?string $patient_rights;
+
+    protected const PROPS = [
+        'id',
+        'name',
+        'email',
+        'phone_number',
+        'password_hash',
+        'password_reset_token',
+        'verification_token',
+        'status',
+        'created_at',
+        'updated_at',
+        'created_by',
+        'updated_by',
+        'notify_email',
+        'notify_app',
+        'notify_sms',
+        'last_logout_at',
+        'position',
+        'driver_license',
+        'npi',
+        'professional_license',
+        'professional_license2',
+        'ahca',
+        'fars',
+        'cfars',
+        'cpr',
+        'first_aid',
+        'hipaa',
+        'osha',
+        'hiv_aids',
+        'domestic_violence',
+        'medical_error',
+        'infection_control',
+        'patient_rights',
+    ];
+
+    public array $permissions = [];
 
     /**
-     * @throws Exception
+     * @throws NotFoundHttpException
      */
-    public static function findById(string $uuid): self
-    {
-        $data = (new SelectSafeQuery())
-            ->from(self::$tableName)
-            ->data()
-            ->where('id', $uuid)
-            ->limit(1)
-            ->execute();
+    public function loadRelation(string $relation_name): array {
+        if ($relation_name === 'permissions') {
+            $this->permissions = array_map(static function(array $data) {
+                return Authentication::fromArray($data);
+            } , AuthenticationRepository::findByUser($this->id));
 
-        if (empty($data)) {
-            throw new NotFoundHttpException('User not found');
+            return $this->permissions;
         }
 
-        return self::fromArray(array_shift($data));
-    }
-
-    /**
-     * @throws RandomException
-     * @throws BadRequestHttpException
-     */
-    public static function create(array $data): false|self
-    {
-        $exist = self::exist($data['username']);
-
-        if ($exist) {
-            throw new BadRequestHttpException('Username already exists.');
-        }
-
-        $uuid = Uuid::uuid4()->toString();
-
-        $created = (bool)(new InsertSafeQuery())
-            ->from(self::$tableName)
-            ->data([
-                'id' => $uuid,
-                'username' => $data['username'],
-                'password' => Security::generatePasswordHash($data['password']),
-            ])
-            ->execute();
-
-        if ($created) {
-            $data = (new SelectSafeQuery())
-                ->from(self::$tableName)
-                ->data()
-                ->where('id', $uuid)
-                ->limit(1)
-                ->execute();
-
-            if (empty($data)) {
-                return false;
-            }
-
-            return self::fromArray(array_shift($data));
-        }
-
-        return false;
-    }
-
-    public static function update(string $uuid, array $data): false|self
-    {
-        // TODO: Implement update() method.
-        return false;
-    }
-
-    public static function findAll(): array
-    {
-        $data = (new SelectSafeQuery())
-            ->from(self::$tableName)
-            ->data()
-            ->execute();
-
-        return array_map(static fn(array $data) => self::fromArray($data, false), $data);
-    }
-
-    protected static function fromArray(array $data): self
-    {
-        $obj = new self();
-        $obj->id = $data['id'];
-        $obj->username = $data['username'];
-        return $obj;
-    }
-
-    public static function findOne(string $id): ?self
-    {
-        $data = (new SelectSafeQuery())
-            ->from(self::$tableName)
-            ->data()
-            ->where('id', $id)
-            ->limit(1)
-            ->execute();
-
-        if (empty($data)) {
-            return null;
-        }
-
-        return self::fromArray(array_shift($data));
-    }
-
-    /**
-     * @throws BadRequestHttpException
-     */
-    public static function findByCredentials(string $username, string $password): ?User
-    {
-        $data = (new SelectSafeQuery())
-            ->from(self::$tableName)
-            ->data()
-            ->where('username', $username)
-            ->execute();
-
-        $data = array_shift($data);
-
-        if ($data && Security::validatePassword($password, $data['password'])) {
-            return self::fromArray($data);
-        }
-
-        return null;
-    }
-
-    public static function exist(string $username): bool
-    {
-        return (new SelectSafeQuery())
-            ->from(self::$tableName)
-            ->data()
-            ->where('username', $username)
-            ->exists();
-    }
-
-    public function __get(string $name)
-    {
-        if (isset($this->$name)) {
-            return $this->$name;
-        }
-
-        if (isset($this->attributes[$name])) {
-            return $this->attributes[$name];
-        }
-
-        if ($name === 'permissions') {
-            $data = (new SelectSafeQuery())
-                ->from('authentication')
-                ->data(['item_name'])
-                ->where('user_id', $this->id)
-                ->execute();
-
-            $this->attributes[$name] = array_column($data, 'item_name');
-
-            return $this->attributes[$name];
-        }
-
-        return null;
+        return parent::loadRelation($relation_name);
     }
 
 }

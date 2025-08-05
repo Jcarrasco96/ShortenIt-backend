@@ -9,7 +9,7 @@ use SimpleApiRest\query\SelectSafeQuery;
 use SimpleApiRest\query\UpdateSafeQuery;
 use SimpleApiRest\rest\Model;
 
-class LinkModel extends Model
+class Link extends Model
 {
 
     protected static string $tableName = 'links';
@@ -97,7 +97,7 @@ class LinkModel extends Model
         return array_map(static fn(array $data) => self::fromArray($data), $data);
     }
 
-    protected static function fromArray(array $data): self
+    public static function fromArray(array $data): self
     {
         $props = ['id', 'original_url', 'short_code', 'access_count', 'created_at'];
         $obj = new self();
@@ -132,10 +132,7 @@ class LinkModel extends Model
             ->exists();
     }
 
-    /**
-     * @throws NotFoundHttpException
-     */
-    public static function findByCode(string $code): self
+    public static function findByCode(string $code): ?self
     {
         $data = (new SelectSafeQuery())
             ->from(self::$tableName)
@@ -145,10 +142,11 @@ class LinkModel extends Model
             ->execute();
 
         if (empty($data)) {
-            throw new NotFoundHttpException("Link with id $code not found");
+            return null;
         }
 
         return self::fromArray(array_shift($data));
     }
+
 
 }
